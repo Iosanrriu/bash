@@ -1,0 +1,93 @@
+#########################################################################
+#									#
+#     INSTRUCTIVO RNA-SEQ WORKFLOW EN WINDOWS 10 USANDO UBUNTU	  	#
+#									#
+#########################################################################
+
+
+DESCARGAR UBUNTU DE WINDOWS STORE
+	1. Ingresar a settings> for depelopers: activar Develeper mode
+	2. Ingresar a caracteristicas de windows y marcar el box "windows como subsistema de linux", guardar y reiniciar.
+	3. INCIAR SESION, LA PRIMERA VES QUE INGRESES LA CLAVE DE ACESO ES "ubuntu"
+	4. 
+	5. Cada ves que increses a la consola windows puedes ingresar a la consola Linuz con el comando "bash" + ENTER
+
+********************************************************************************RECOMENDACÓN********************************************
+
+Antes de descargar los archivos siguientes incresar al disco (C:) > User > "tu usuario" > y dentro crea una carpeta donde almacenaras 
+todos tus archivos de trabajo de RNA-seq, cambiar las carpetas de lugar una ves instalados pueden causar problemas en la ejecucion de 
+estos al igual que alterar las rutas de las carpetas de salida. ( yo tengo 4 carpetas: "sratoolkit" , "QC" , "TRIM ", " ALING") 
+
+
+*****************************************************************************************************************************************
+
+>DESCARGA DE ARCHIVOS SSR:
+
+	1. Descargar archivo .gz de sratoolkit desde el repositorio en ncbi(https://trace.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software)
+	   y mover la carpeta descargada a la carpeta de trabajo.
+
+	2. Abrir la consola Windows, al escribir "bash" se abrirá la consola de Ubuntu.
+
+	3. Descomprimir el archivo .gz con el comando " tar -xzf " seguido por el nombre completo de la carpeta .gz 
+	   ej:tar -xzf sratoolkit.current-centos_linux64.tar.gz
+
+	4. ingresar al directorio "bin" dentro de la carpeta SRA(si desea cambiar el nombre de la carpeta
+	   usar el comando "ls" para corroborar que el cambio se realizo correctamente antes de realizar cambios en el archivo).
+
+	5. En la carpeta "bin" usar el comando "sudo apt-get install sra-toolkit"
+
+	6. EN la carpeta "bin" usar el comenta "./vdb-config -i" y definir la carpeta donde se almacenaran los archivos que descargue
+
+	7. En mi caso la ruta de llegada al SRR es:
+
+	   >desde Linux Console:
+	   home/iosanrriu/"carpeta creada desde la configuracion del toolkit"/"sra"<- es una carpeta que se crea cuando terminas la configuracion de sratoolkit
+
+	   >desde Windows Console: 
+	   C:\Users\espin\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu20.04onWindows_79rhkp1fndgsc\LocalState\rootfs\home\iosanrriu\Downloads_SRR\sra
+	
+	6. Para usar los comandos directamente desde la ruta "bin" se debe usar "./" antes del comando + ENTER
+	7. para transformar los archivos a ".fasta" se usa el comando "prefetch"
+	
+
+>DESCARGAR FASTQC
+			
+
+	->Encender Xming, y en consola ejecutar "export DISPLAY=:0.0" <- para la interfas grafica
+	->ejecutar fastq
+
+
+>DESCARGAR TRIMMOMATIC(ubuntu 20.04LTS)
+
+	->sudo apt-get install -y trimmomatic
+	->time java -jar trimmomatic PE -threads 11 -phred33 HealthyLung_1_1.fastq
+
+	->desde la carpeta donde esta trimmomatic.jar
+	-> PARA SE->> java -jar trimmomatic-0.39.jar SE -threads 3 -phred33 
+		      $rutaOrigenDelArchivo/SRR###.fastq $rutaSalida/SRR###_out.fastq 
+		      ILLUMINACLIP:TruSeq3-SE.fa:2:30:10 LEADING:5 TRAILING:5 SLIDINGWINDOW:4:30 MINLEN:30
+
+	-> PARA PE->> java -jar trimmomatic-0.39.jar PE -threads 3 -phred33 
+		      $rutaOrigenDelArchivoForward/SRR###.fastq $rutaOrigenDelReverse/SRR###.fastq $rutaSalida/SRR###_out_F.fastq $rutaSalida/SRR###_out_R.fastq
+		      ILLUMINACLIP:TruSeq3-SE.fa:2:30:10 LEADING:5 TRAILING:5 SLIDINGWINDOW:4:30 MINLEN:30
+
+
+consejo declarar variables con las rutas de los programas donde se quieren ejecutar(ruta="/mnt/c/Users/espin/Bio-WS/PROYECTS"
+
+>KALLISTO (Gene count)
+	*ayuda(https://github.com/pachterlab/kallisto-transcriptome-indices)	
+	->sudo apt-get install kallisto
+	->descarga archivo curl -O ftp://ftp.ensembl.org/pub/release-94/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
+	(To build the indices, download the full transcriptomes from Ensembl (files ending in cdna.all.fa.gz) and build the indices with kallisto.)
+	->(armar indice)kallisto index -i transcripts.idx Homo_sapiens.GRCh38.cdna.all.fa.gz (en la carpeta donde esta ese archivo, demora unos 5-10 min)
+	(index="/mnt/c/Users/espin/Bio-WS/Reference_Genomes/homo_sapiens/transcripts.idx")
+	->kallisto quant -i $index -o Quant1 --single -l 100 -s 20 SRR11517725_1_P.fastq 
+
+
+>bustools
+	
+	->https://github.com/BUStools/bustools
+
+notas: si /bin/bash^M: bad interpreter:
+
+run >sed -i -e 's/\r$//' scriptname.sh
